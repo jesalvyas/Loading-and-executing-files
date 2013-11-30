@@ -13,14 +13,20 @@ int mod (int a, int b);
 char input[80];
 char buffer[13312];
 
-int main {
+int main() {
 	
 
 	makeInterrupt21();
-    interrupt(0x21, 3, "message\0", buffer, 0);
-    interrupt(0x21, 3, buffer, 0, 0);
-
-	while(1);
+  //interrupt(0x21, 3, "message\0", buffer, 0); ~~~~~~~Step 1
+  //interrupt(0x21, 3, buffer, 0, 0);
+  //printString("\r\n\0");
+  //interrupt(0x21, 6, "tstprg\0", 0x2000, 0);  ~~~~~~~Step 2
+  //printString("\r\n\0");
+  //interrupt(0x21, 7, "tstpr2\0", 0x2000, 0);  ~~~~~~~Step 3
+  //printString("\r\n\0");
+	interrupt(0x21, 6, "shell\0", 0x2000, 0); //  ~~~~~~~Step 4
+  interrupt(0x21, 7, 0, 0, 0);
+  while(1);
 }
 
 
@@ -48,13 +54,13 @@ void readString(char* string) {
 	string[index + 1] = 0;
 }
 
-void readFile(char* filename, int segment); {
+void readFile(char* filename, int segment) {
 	    int i,j;
         char directory[512];
-        char dirFilename[7];
+        char filename[7];
         char test[1000];
 
-        readSector(dir, 2);
+        readSector(directory, 2);
 
         for (i = 0; i < 512; i+=32) {
                 for(j = 0; j < 6; j++) {
@@ -74,18 +80,15 @@ void readFile(char* filename, int segment); {
 }
 void executeProgram(char* name, int segment) {
         char buffer[0x1000];
-        int i;
+        int i = 0;
 
-        if(mod(segment, 0x1000) != 0 || segment <= 0x1000 || segment > 0xA000) {
-        	return;
-        }     
-        readFile(name, buffer);
-        
-        for(i = 0; i < 0x1000; i++) {
-                putInMemory(segment, i, buffer[i]);
-        }
-
-        launchProgram(segment);
+   readFile(name, buffer);
+   while ( i < 0x1000)
+   {
+      putInMemory(segment, i, buffer[i]);
+      i++;
+   }
+   launchProgram(segment);
 }
 
 
@@ -106,7 +109,11 @@ void handleInterrupt21(int ax, int bx, int cx, int dx) {
 		readSector(bx, cx);
 	} else if (ax == 3) {
 		readFile(bx, cx);
-	} else {
+	} else if (ax = 4) {
+    executeProgram(bx, cx);
+  } else if (ax = 5) {
+    terminate();
+  } else {
 		printString("Interrupt21 error \r\n\0");
     }
 	
