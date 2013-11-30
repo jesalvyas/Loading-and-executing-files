@@ -9,14 +9,12 @@ void executeProgram(char* name, int segment);
 void handleInterrupt21(int ax, int bx, int cx, int dx);
 void terminate();
 int mod (int a, int b);
-
+ 
 char input[80];
 char buffer[13312];
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~ main function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int main() {
-	
-
-	makeInterrupt21();
+  makeInterrupt21();
   //interrupt(0x21, 3, "message\0", buffer, 0); ~~~~~~~Step 1
   //interrupt(0x21, 3, buffer, 0, 0);
   //printString("\r\n\0");
@@ -26,11 +24,11 @@ int main() {
   //printString("\r\n\0");
 	interrupt(0x21, 6, "shell\0", 0x2000, 0); //  ~~~~~~~Step 4
   interrupt(0x21, 7, 0, 0, 0);
+  
   while(1);
 }
 
-
-
+//~~~~~~~~~~~~~~~~~~ function for printing to screen ~~~~~~~~~~~~~~~~~~
 void printString(char* string) {
 	int index = 0;
 	char c = string[index];
@@ -40,6 +38,7 @@ void printString(char* string) {
 	}
 }
 
+// ~~~~~~~~~~~~~~~~ function to read from the keyboard ~~~~~~~~~~~~~~~~
 void readString(char* string) {
 	int index = 0;
 	char c = 0;
@@ -54,6 +53,16 @@ void readString(char* string) {
 	string[index + 1] = 0;
 }
 
+// ~~~~~~~~~~~~~~ function to read a sector from disk ~~~~~~~~~~~~~~~~~
+void readSector(char* buffer, int sector) {
+  int CH = sector/36;
+  int CL = mod (sector, 18);
+  int DH = mod (sector/18, 2);
+  interrupt(0x13, 2 * 256 + 1, buffer, CH * 256 + CL + 1, DH * 256 + 0);
+
+}
+
+// ~~~~~~~~~~~~~~~~~~~~ function to read a file ~~~~~~~~~~~~~~~~~~~~~~
 void readFile(char* filename, int segment) {
 	    int i,j;
         char directory[512];
@@ -91,7 +100,7 @@ void executeProgram(char* name, int segment) {
    launchProgram(segment);
 }
 
-
+// ~~~~~~~~~~~~~~ function for calculating remainder ~~~~~~~~~~~~~~~~~~~
 int mod(int a, int b) {
         while (a >= b) {
         	a = a - b;
@@ -100,6 +109,7 @@ int mod(int a, int b) {
         return a;
 }
 
+// ~~~~~~~~~~~~~~~~~~ function to handle interrupt ~~~~~~~~~~~~~~~~~~~~~
 void handleInterrupt21(int ax, int bx, int cx, int dx) {
 	if (ax == 0) {
 		printString(bx);
@@ -119,6 +129,7 @@ void handleInterrupt21(int ax, int bx, int cx, int dx) {
 	
 }
 
+// ~~~~~~~~~~~~~~~~~ function to terminate ~~~~~~~~~~~~~~~~~~~~~~
 void terminate() {
         interrupt(0x21, 4, "shell\0", 0x2000, 0);
 }
