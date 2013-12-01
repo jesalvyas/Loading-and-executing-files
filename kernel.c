@@ -59,7 +59,6 @@ void readSector(char* buffer, int sector) {
   int CL = mod (sector, 18);
   int DH = mod (sector/18, 2);
   interrupt(0x13, 2 * 256 + 1, buffer, CH * 256 + CL + 1, DH * 256 + 0);
-
 }
 
 // ~~~~~~~~~~~~~~~~~~~~ function to read a file ~~~~~~~~~~~~~~~~~~~~~~
@@ -70,30 +69,28 @@ void readFile(char* filename, int segment) {
         char test[1000];
 
         readSector(directory, 2);
-
         for (i = 0; i < 512; i+=32) {
                 for(j = 0; j < 6; j++) {
                         if(directory[i + j] != filename[j]) break;
                 }
                 if(j == 6) break;
         }
-        if (j != 6) return;
-
+        if (j != 6) {
+          return;
+        }
         for (j = 6; j < 32; j++) {
                 if(directory[i + j] == 0) {
                 	break;
                 } 
-                	
                 readSector(buffer + (j - 6) * 512, directory[i + j]);
         }
 }
 void executeProgram(char* name, int segment) {
-        char buffer[0x1000];
-        int i = 0;
-
-   readFile(name, buffer);
-   while ( i < 0x1000)
-   {
+  char buffer[0x1000];
+  int i = 0;
+  readFile(name, buffer);
+  
+  while ( i < 0x1000) {
       putInMemory(segment, i, buffer[i]);
       i++;
    }
@@ -105,7 +102,6 @@ int mod(int a, int b) {
         while (a >= b) {
         	a = a - b;
         }
-                
         return a;
 }
 
@@ -125,7 +121,7 @@ void handleInterrupt21(int ax, int bx, int cx, int dx) {
     terminate();
   } else {
 		printString("Interrupt21 error \r\n\0");
-    }
+  }
 	
 }
 
